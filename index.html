@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Preferencias de usuario</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; transition: .3s; }
+    body.claro  { background: #fff; color: #222; }
+    body.oscuro { background: #222; color: #eee; }
+    label, button { margin: .5rem .5rem .5rem 0; }
+    pre { background: rgba(128,128,128,.2); padding: 1rem; }
+  </style>
+</head>
+<body>
+  <h1 id="titulo">Preferencias</h1>
+
+  <label>Tema:
+    <select id="tema">
+      <option value="claro">Claro</option>
+      <option value="oscuro">Oscuro</option>
+    </select>
+  </label>
+  <label>Idioma:
+    <select id="idioma">
+      <option value="es">Español</option>
+      <option value="en">English</option>
+    </select>
+  </label>
+  <button id="guardar">Guardar</button>
+  <button id="borrar">Borrar</button>
+
+  <h2>Bug deliberado</h2>
+  <button id="bug">Probar clase Usuario</button>
+  <pre id="salida"></pre>
+
+  <script>
+    /* ---------- PARTE 1: preferencias ---------- */
+    const CLAVE_PREFS = "preferencias";
+    const textos = {
+      es: "Preferencias",
+      en: "Preferences"
+    };
+
+    function aplicarPreferencias(prefs) {
+      document.body.className = prefs.tema;
+      document.getElementById("titulo").textContent = textos[prefs.idioma];
+      document.getElementById("tema").value = prefs.tema;
+      document.getElementById("idioma").value = prefs.idioma;
+    }
+
+    function guardarPreferencias() {
+      const prefs = {
+        tema: document.getElementById("tema").value,
+        idioma: document.getElementById("idioma").value
+      };
+      localStorage.setItem(CLAVE_PREFS, JSON.stringify(prefs));
+      aplicarPreferencias(prefs);
+    }
+
+    function cargarPreferencias() {
+      const guardado = localStorage.getItem(CLAVE_PREFS);
+      const prefs = guardado
+        ? JSON.parse(guardado)
+        : { tema: "claro", idioma: "es" };
+      aplicarPreferencias(prefs);
+    }
+
+    document.getElementById("guardar").addEventListener("click", guardarPreferencias);
+    document.getElementById("borrar").addEventListener("click", () => {
+      localStorage.removeItem(CLAVE_PREFS);
+      cargarPreferencias();
+    });
+    cargarPreferencias();
+
+    /* ---------- PARTE 2: bug deliberado ---------- */
+    class Usuario {
+      constructor(nombre, tema, idioma) {
+        this.nombre = nombre;
+        this.tema = tema;
+        this.idioma = idioma;
+      }
+      saludar() {
+        return `Hola, ${this.nombre}. Tema: ${this.tema}, idioma: ${this.idioma}`;
+      }
+    }
+    
+    function restaurarUsuario(datos) {
+        return new Usuario(datos.nombre, datos.tema, datos.idioma);
+    }
+
+    document.getElementById("bug").addEventListener("click", () => {
+      const salida = document.getElementById("salida");
+      const original = new Usuario("Ana", "oscuro", "es");
+      console.log("Original:", original.saludar());
+
+      localStorage.setItem("usuario", JSON.stringify(original));
+      const recuperado = JSON.parse(localStorage.getItem("usuario"));
+      console.log(original instanceof Usuario);
+      console.log(recuperado instanceof Usuario);
+      console.log(typeof original.saludar, typeof recuperado.saludar);
+
+      console.log("Recuperado:", recuperado);
+      salida.textContent = recuperado.saludar(); // TypeError: no es una función
+    });
+  </script>
+</body>
+</html>
